@@ -126,8 +126,10 @@ tax_list_t set_payment_date(tax_list_t tax_list, period_t period, date_t date) {
 	while(!eq_period(tax->data->period, period))
 		tax = tax->next;
 
-	if(tax->data->pay_date != NULL)
+	if(tax->data->pay_date != NULL) {
 		free(tax->data->pay_date);
+		tax->data->pay_date = NULL;
+	}
 
 	date_t dest_date = date_empty();
 	dest_date->day = date->day;
@@ -170,7 +172,7 @@ tax_t destroy_tax(tax_t tax) {
 	destroy_info(tax->data);
 	free(tax);
 	tax = NULL;
-	return tax;
+	return NULL;
 }
 
 tax_list_t destroy_tax_list(tax_list_t tax_list) {
@@ -180,5 +182,5 @@ tax_list_t destroy_tax_list(tax_list_t tax_list) {
 		tax_list->list = destroy_tax(tax_list->list);
 	free(tax_list);
 	tax_list = NULL;
-	return tax_list;
+	return NULL;
 }

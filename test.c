@@ -76,7 +76,7 @@ int main() {
 	printf("The tax list is:\n");
 	tax_dump(tax_list, stdout);
 
-	
+
 
 	printf("\nDESTROYING...\n");
 	printf("Destroying tax list...\n");
@@ -91,9 +91,10 @@ int main() {
 
 	printf("Destroying allocated period\n");
 	free(period);
+	period = NULL;
 
 	printf("Destroying allocated date\n");
-	destroy_date(date);
+	date = destroy_date(date);
 
 	return 0;
 }

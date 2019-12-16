@@ -51,10 +51,14 @@ bool eq_period(period_t info1, period_t info2) {
 }
 
 info_t destroy_info(info_t info) {
-	if(info->period != NULL)
+	if(info->period != NULL) {
 		free(info->period);
-	if(info->pay_date != NULL)
+		info->period = NULL;
+	}
+	if(info->pay_date != NULL) {
 		free(info->pay_date);
+		info->pay_date = NULL;
+	}
 	free(info);
 	info = NULL;
 	return NULL;
