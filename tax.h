@@ -15,7 +15,7 @@
  * sorted from earliest to oldest counting from the head. For example,
  * head->(NULL, december, next)->(prev, november, next)->...->(prev, january, NULL)<-end */
 typedef struct _tax_t {
-	unsigned int data;
+	info_t data;
 	struct _tax_t *next;
 } *tax_t;
 
@@ -34,17 +34,17 @@ tax_list_t tax_list_empty();
 
 /* Adds a new tax node with info @data to the tax list pointed by @tax_list.
  * Returns the new tax list. */
-tax_list_t tax_add(tax_list_t tax_list, unsigned int data);
+tax_list_t tax_add(tax_list_t tax_list, info_t data);
 
 /* Removes the tax of period @period from the tax list @head (of type @tax_type -> this 
  * will be implemented outside tax.c). */
-tax_list_t tax_remove(tax_list_t tax_list, unsigned int period);
+tax_list_t tax_remove(tax_list_t tax_list, info_t period);
 
 /* Returns true if there is already a tax with period @period in the list. */
-bool tax_exists(tax_list_t tax_list, unsigned int period);
+bool tax_exists(tax_list_t tax_list, info_t period);
 
 /* Returns true if the tax specified by @period has already been paid. */
-bool tax_is_paid(tax_list_t tax_list, unsigned int period);
+bool tax_is_paid(tax_list_t tax_list, info_t period);
 
 /* Prints the tax list @tax_list into file @file. */
 void tax_dump(tax_list_t tax_list, FILE *file);
@@ -54,7 +54,5 @@ tax_t destroy_tax(tax_t tax);
 
 /* Frees all allocated memory of a tax_list @tax_list. */
 tax_list_t destroy_tax_list(tax_list_t tax_list);
-
-static tax_t free_node(tax_t node);
 
 #endif

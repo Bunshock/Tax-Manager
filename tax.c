@@ -11,8 +11,7 @@
 tax_t tax_empty() {
 	tax_t tax = NULL;
 	tax = (tax_t) calloc(1, sizeof(struct _tax_t));
-	printf("allocated new tax\n");
-	tax->data = 0u;
+	tax->data = NULL;
 	tax->next = NULL;
 	return tax;
 }
@@ -20,13 +19,12 @@ tax_t tax_empty() {
 tax_list_t tax_list_empty() {
 	tax_list_t tax_list = NULL;
 	tax_list = (tax_list_t) calloc(1, sizeof(struct _tax_list_t));
-	printf("allocated new tax list\n");
-	tax_list->list = tax_empty();
+	tax_list->list = NULL;
 	tax_list->length = 0u;
 	return tax_list;
 }
 
-tax_t do_tax_add(tax_t head, unsigned int data) {
+tax_t do_tax_add(tax_t head, info_t data) {
 	tax_t res = head;
 	tax_t new_node = tax_empty();
 	new_node->data = data;
@@ -52,21 +50,18 @@ tax_t do_tax_add(tax_t head, unsigned int data) {
 	return res;
 }
 
-
-tax_list_t tax_add(tax_list_t tax_list, unsigned int data) {
+tax_list_t tax_add(tax_list_t tax_list, info_t data) {
 	if(tax_exists(tax_list, data)) {
 		printf("Tax with specified period already exists.\n");
 		return tax_list;
 	}
-	if(tax_list->list == NULL)
-		tax_list->list = tax_empty();
 	tax_list->list = do_tax_add(tax_list->list, data);
 	tax_list->length++;
 	assert(tax_list != NULL);
 	return tax_list;
 }
 
-tax_t do_tax_remove(tax_t head, unsigned int period) {
+tax_t do_tax_remove(tax_t head, info_t period) {
 	tax_t res = head;
 
 	if(head == NULL)
@@ -75,7 +70,7 @@ tax_t do_tax_remove(tax_t head, unsigned int period) {
 	bool is_equal = eq_period(head->data, period);
 	if(is_equal) {
 		res = head->next;
-		free_node(head);
+		destroy_tax(head);
 	}
 	else {
 		tax_t prev_tax = NULL;
@@ -85,13 +80,13 @@ tax_t do_tax_remove(tax_t head, unsigned int period) {
 		}
 		if(head != NULL) {
 			prev_tax->next = head->next;
-			free_node(head);
+			destroy_tax(head);
 		}
 	}
 	return res;
 }
 
-tax_list_t tax_remove(tax_list_t tax_list, unsigned int period) {
+tax_list_t tax_remove(tax_list_t tax_list, info_t period) {
 	assert(tax_list != NULL);
 	if(!tax_exists(tax_list, period)) {
 		printf("The specified tax does not exist.\n");
@@ -102,7 +97,7 @@ tax_list_t tax_remove(tax_list_t tax_list, unsigned int period) {
 	return tax_list;
 }
 
-bool tax_exists(tax_list_t tax_list, unsigned int period) {
+bool tax_exists(tax_list_t tax_list, info_t period) {
 	if(tax_list == NULL)
 		return false;
 
@@ -115,8 +110,8 @@ bool tax_exists(tax_list_t tax_list, unsigned int period) {
 	return exists;
 }
 
-bool tax_is_paid(tax_list_t tax_list, unsigned int period) {
-	if(tax_list != NULL && period > 1) {;}
+bool tax_is_paid(tax_list_t tax_list, info_t period) {
+	if(tax_list != NULL && period->year > 1) {;}
 	return true;
 }
 
@@ -133,20 +128,13 @@ void tax_dump(tax_list_t tax_list, FILE *file) {
 	}
 }
 
-static tax_t free_node(tax_t node) {
-    if(node != NULL){
-        free(node);
-        printf("freed tax node\n");
-    }
-    return (NULL);
-}
-
 tax_t destroy_tax(tax_t tax) {
 	if(tax == NULL)
 		return NULL;
 	if(tax->next != NULL)
 		destroy_tax(tax->next);
-	free_node(tax);
+	destroy_info(tax->data);
+	free(tax);
 	tax = NULL;
 	return tax;
 }
@@ -157,7 +145,6 @@ tax_list_t destroy_tax_list(tax_list_t tax_list) {
 	if(tax_list->length > 0u)
 		tax_list->list = destroy_tax(tax_list->list);
 	free(tax_list);
-	printf("freed tax_list\n");
 	tax_list = NULL;
 	return tax_list;
 }
