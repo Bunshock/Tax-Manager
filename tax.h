@@ -40,6 +40,9 @@ tax_list_t tax_add(tax_list_t tax_list, info_t data);
  * will be implemented outside tax.c). */
 tax_list_t tax_remove(tax_list_t tax_list, period_t period);
 
+/* Returns the @tax_list list length. */
+unsigned int tax_list_length(tax_list_t tax_list);
+
 /* Returns true if there is already a tax with period @period in the list. */
 bool tax_exists(tax_list_t tax_list, period_t period);
 

@@ -97,6 +97,11 @@ tax_list_t tax_remove(tax_list_t tax_list, period_t period) {
 	return tax_list;
 }
 
+unsigned int tax_list_length(tax_list_t tax_list) {
+	assert(tax_list != NULL);
+	return tax_list->length;
+}
+
 bool tax_exists(tax_list_t tax_list, period_t period) {
 	if(tax_list == NULL)
 		return false;
