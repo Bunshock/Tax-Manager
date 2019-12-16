@@ -38,13 +38,16 @@ tax_list_t tax_add(tax_list_t tax_list, info_t data);
 
 /* Removes the tax of period @period from the tax list @head (of type @tax_type -> this 
  * will be implemented outside tax.c). */
-tax_list_t tax_remove(tax_list_t tax_list, info_t period);
+tax_list_t tax_remove(tax_list_t tax_list, period_t period);
 
 /* Returns true if there is already a tax with period @period in the list. */
-bool tax_exists(tax_list_t tax_list, info_t period);
+bool tax_exists(tax_list_t tax_list, period_t period);
+
+/* Puts time information specified in @date into the tax specified by @period. */
+tax_list_t set_payment_date(tax_list_t tax_list, period_t period, date_t date);
 
 /* Returns true if the tax specified by @period has already been paid. */
-bool tax_is_paid(tax_list_t tax_list, info_t period);
+bool tax_is_paid(tax_list_t tax_list, period_t period);
 
 /* Prints the tax list @tax_list into file @file. */
 void tax_dump(tax_list_t tax_list, FILE *file);
