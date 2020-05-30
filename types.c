@@ -30,5 +30,5 @@ date_t get_local_time(date_t date) {
 date_t destroy_date(date_t date) {
 	free(date);
 	date = NULL;
-	return NULL;
+	return date;
 }

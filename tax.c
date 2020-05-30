@@ -5,182 +5,83 @@
  */
 #include <assert.h>
 #include <stdlib.h>
+#include <stdio.h>
 
 #include "tax.h"
+#include "avlt.h"
 
-tax_t tax_empty() {
-	tax_t tax = NULL;
-	tax = (tax_t) calloc(1, sizeof(struct _tax_t));
-	tax->data = NULL;
-	tax->next = NULL;
-	return tax;
+struct _tax_tree_t {
+	avlt_t root;
+	unsigned int length;
+};
+
+tax_tree_t tax_tree_empty() {
+	tax_tree_t tax_tree = calloc(1, sizeof(struct _tax_tree_t));
+	tax_tree->root = avlt_empty();
+	tax_tree->length = 0u;
+	assert(tax_tree != NULL);
+	return tax_tree;
 }
 
-tax_list_t tax_list_empty() {
-	tax_list_t tax_list = NULL;
-	tax_list = (tax_list_t) calloc(1, sizeof(struct _tax_list_t));
-	tax_list->list = NULL;
-	tax_list->length = 0u;
-	return tax_list;
+tax_tree_t tax_add(tax_tree_t tax_tree, info_t data) {
+	tax_tree->root = avlt_add(tax_tree->root, data);
+	tax_tree->length++;
+	return tax_tree;
 }
 
-tax_t do_tax_add(tax_t head, info_t data) {
-	tax_t res = head;
-	tax_t new_node = tax_empty();
-	new_node->data = data;
+tax_tree_t tax_remove(tax_tree_t tax_tree, period_t period) {
+	tax_tree->root = avlt_remove(tax_tree->root, period);
+	tax_tree->length--;
+	return tax_tree;
+}
 
-	if(head == NULL)
-		return new_node;
+unsigned int tax_tree_length(tax_tree_t tax_tree) {
+	return tax_tree->length;
+}
 
-	if(comes_before(head->data->period, data->period)) {
-		res = new_node;
-		new_node->next = head;
-	}
-	else {
-		tax_t next_tax;
-		while(comes_before(data->period, head->data->period) && head != NULL) {
-			next_tax = head->next;
-			if(next_tax == NULL || comes_before(next_tax->data->period, data->period)) {
-				head->next = new_node;
-				new_node->next = next_tax;
-			}
-			head = next_tax;
+bool tax_exists(tax_tree_t tax_tree, period_t period) {
+	return avlt_contains(tax_tree->root, period);
+}
+
+info_t tax_info(tax_tree_t tax_tree, period_t period) {
+	return avlt_info(tax_tree->root, period);
+}
+
+tax_tree_t set_payment_date(tax_tree_t tax_tree, period_t period, date_t date) {
+	assert(tax_tree->root != NULL && period != NULL && date != NULL);
+	info_t info = tax_info(tax_tree, period);
+	
+	if(info != NULL) {
+		if(info->pay_date != NULL) {
+			free(info->pay_date);
+			info->pay_date = NULL;
 		}
+		info->pay_date = date;
 	}
-	return res;
+
+	return tax_tree;
 }
 
-tax_list_t tax_add(tax_list_t tax_list, info_t data) {
-	if(tax_exists(tax_list, data->period)) {
-		printf("Tax with specified period already exists.\n");
-		return tax_list;
-	}
-	tax_list->list = do_tax_add(tax_list->list, data);
-	tax_list->length++;
-	assert(tax_list != NULL);
-	return tax_list;
-}
-
-tax_t do_tax_remove(tax_t head, period_t period) {
-	tax_t res = head;
-
-	if(head == NULL)
-		return NULL;
-
-	bool is_equal = eq_period(head->data->period, period);
-	if(is_equal) {
-		res = head->next;
-		destroy_tax(head);
-	}
-	else {
-		tax_t prev_tax = NULL;
-		while(head != NULL && !eq_period(head->data->period, period)) {
-			prev_tax = head;
-			head = head->next;
-		}
-		if(head != NULL) {
-			prev_tax->next = head->next;
-			destroy_tax(head);
-		}
-	}
-	return res;
-}
-
-tax_list_t tax_remove(tax_list_t tax_list, period_t period) {
-	assert(tax_list != NULL);
-	if(!tax_exists(tax_list, period)) {
-		printf("The specified tax does not exist.\n");
-		return tax_list;
-	}
-	tax_list->list = do_tax_remove(tax_list->list, period);
-	tax_list->length--;
-	return tax_list;
-}
-
-unsigned int tax_list_length(tax_list_t tax_list) {
-	assert(tax_list != NULL);
-	return tax_list->length;
-}
-
-bool tax_exists(tax_list_t tax_list, period_t period) {
-	if(tax_list == NULL)
+bool tax_is_paid(tax_tree_t tax_tree, period_t period) {
+	assert(tax_tree->root != NULL && period != NULL);
+	info_t info = tax_info(tax_tree, period);
+	
+	if(info == NULL)
 		return false;
 
-	bool exists = false;
-	tax_t head = tax_list->list;
-	while(head != NULL && !exists) {
-		exists = eq_period(head->data->period, period);
-		head = head->next;
-	}
-	return exists;
+	return info->paid;
 }
 
-tax_list_t set_payment_date(tax_list_t tax_list, period_t period, date_t date) {
-	if(tax_list == NULL)
-		return NULL;
-
-	if(!tax_exists(tax_list, period))
-		return tax_list;
-
-	tax_t tax = tax_list->list;
-	while(!eq_period(tax->data->period, period))
-		tax = tax->next;
-
-	if(tax->data->pay_date != NULL) {
-		free(tax->data->pay_date);
-		tax->data->pay_date = NULL;
-	}
-
-	date_t dest_date = date_empty();
-	dest_date->day = date->day;
-	dest_date->month = date->month;
-	dest_date->year = date->year;
-	tax->data->pay_date = dest_date;
-	return tax_list;
+void tax_dump(tax_tree_t tax_tree, FILE *file) {
+	assert(tax_tree != NULL && file != NULL);
+	avlt_dump(tax_tree->root, file);
+	fprintf(file, "\nTax count: %u\n", tax_tree_length(tax_tree));
 }
 
-bool tax_is_paid(tax_list_t tax_list, period_t period) {
-	if(tax_list == NULL || !tax_exists(tax_list, period))
-		return false;
-
-	tax_t tax = tax_list->list;
-	while(!eq_period(tax->data->period, period))
-		tax = tax->next;
-
-	return tax->data->paid;
-}
-
-void tax_dump(tax_list_t tax_list, FILE *file) {
-	if(tax_list != NULL) {
-		unsigned int len = tax_list->length;
-		tax_t tax = tax_list->list;
-		while(len > 0){
-			fprintf(file, "%d/%d:\n", tax->data->period->month, tax->data->period->year);
-			info_dump(tax->data, file);
-			fprintf(file, "\n");
-			tax = tax->next;
-			len--;
-		}
-	}
-}
-
-tax_t destroy_tax(tax_t tax) {
-	if(tax == NULL)
-		return NULL;
-	if(tax->next != NULL)
-		destroy_tax(tax->next);
-	destroy_info(tax->data);
-	free(tax);
-	tax = NULL;
-	return NULL;
-}
-
-tax_list_t destroy_tax_list(tax_list_t tax_list) {
-	if(tax_list == NULL)
-		return NULL;
-	if(tax_list->length > 0u)
-		tax_list->list = destroy_tax(tax_list->list);
-	free(tax_list);
-	tax_list = NULL;
-	return NULL;
+tax_tree_t destroy_tax_tree(tax_tree_t tax_tree) {
+	assert(tax_tree != NULL);
+	tax_tree->root = avlt_destroy(tax_tree->root);
+	free(tax_tree);
+	tax_tree = NULL;
+	return tax_tree;
 }
